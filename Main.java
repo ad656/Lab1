@@ -1,5 +1,5 @@
 package TodoList;
-import java.io.*; 
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -13,13 +13,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.text.TextAlignment;
 import javafx.geometry.Insets;
 import javafx.scene.text.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.List;
 import java.io.FileWriter;
 
@@ -108,6 +108,7 @@ class TaskList extends VBox {
         this.updateTaskIndices();
     }
 
+    // TODO: Complete this method
     /*
      * Load tasks from a file called "tasks.txt"
      * Add the tasks to the children of tasklist component
@@ -116,24 +117,24 @@ class TaskList extends VBox {
         // hint 1: use try-catch block
         // hint 2: use BufferedReader and FileReader
         // hint 3: task.getTaskName().setText() sets the text of the task
-        try{
-            List<String> lines = Files.readAllLines(Paths.get("tasks.txt"));
-            String[] linestasks = lines.toArray(new String[0]);
-            for(int i = 0;i<linestasks.length;i++){
+
+        try(FileReader fr = new FileReader("tasks.txt");
+                BufferedReader br = new BufferedReader(fr)){
+            String line = null;
+            while((line = br.readLine()) != null) {
                 Task task = new Task();
-                task.getTaskName().setText(linestasks[i]);
+                task.getTaskName().setText(line);
                 this.getChildren().add(task);
                 updateTaskIndices();
             }
-
-        }
-        catch(Exception e){
+        }catch(Exception e){
             e.printStackTrace();
         }
-        //System.out.println("loadtasks() not implemented!");
+
+//        System.out.println("loadtasks() not implemented!");
     }
 
-    
+    // TODO: Complete this method
     /*
      * Save tasks to a file called "tasks.txt"
      */
@@ -143,19 +144,18 @@ class TaskList extends VBox {
         // hint 3: this.getChildren() gets the list of tasks
         try{
             FileWriter taskwrite = new FileWriter("tasks.txt");
-            for(int i = 0;i<this.getChildren().size();i++){
-                taskwrite.write(this.getChildren().get(i)+ "\n");
+            for(int i = 0; i < this.getChildren().size(); i++){
+                taskwrite.write(((Task) this.getChildren().get(i)).getTaskName().getText() + "\n");
             }
             taskwrite.close();
-        }
-        catch(Exception e){
+        }catch(Exception e){
             e.printStackTrace();
         }
 
-        //System.out.println("savetasks() not implemented!");
+//        System.out.println("savetasks() not implemented!");
     }
 
-   
+    // TODO: Complete this method
     /*
      * Sort the tasks lexicographically
      */
@@ -163,21 +163,19 @@ class TaskList extends VBox {
         // hint 1: this.getChildren() gets the list of tasks
         // hint 2: Collections.sort() can be used to sort the tasks
         // hint 3: task.getTaskName().setText() sets the text of the task
-
-        List<String> tusks = new ArrayList<>();
-        for(int i = 0;i<this.getChildren().size();i++){
-            tusks.add(this.getChildren().get(i).toString());
-        }  
-        Collections.sort(tusks);
+        List<String> listChildren = new ArrayList<String>();
+        for(int i = 0; i < this.getChildren().size(); i++){
+            listChildren.add(((Task) this.getChildren().get(i)).getTaskName().getText().toString());
+        }
+        Collections.sort(listChildren);
         this.getChildren().clear();
-        for(int i = 0;i<tusks.size();i++){
+        for(int i = 0; i < listChildren.size(); i++){
             Task task = new Task();
-            task.getTaskName().setText(tusks.get(i));
+            task.getTaskName().setText(listChildren.get(i));
             this.getChildren().add(task);
             updateTaskIndices();
         }
-
-        // System.out.println("sorttasks() not implemented!");
+ //       System.out.println("sorttasks() not implemented!");
     }
 }
 
@@ -186,6 +184,8 @@ class Footer extends HBox {
     private Button addButton;
     private Button clearButton;
     // TODO: Add a button called "loadButton" to load tasks from file
+    // TODO: Add a button called "saveButton" to save tasks to a file
+    // TODO: Add a button called "sortButton" to sort the tasks lexicographically
     private Button loadButton;
     private Button saveButton;
     private Button sortButton;
@@ -202,6 +202,7 @@ class Footer extends HBox {
         addButton.setStyle(defaultButtonStyle); // styling the button
         clearButton = new Button("Clear finished"); // text displayed on clear tasks button
         clearButton.setStyle(defaultButtonStyle);
+
         loadButton = new Button("Load Tasks");
         loadButton.setStyle(defaultButtonStyle);
         saveButton = new Button("Save Tasks");
@@ -223,15 +224,15 @@ class Footer extends HBox {
         return clearButton;
     }
 
-    public Button getloadButton(){
+    public Button getLoadButton(){
         return loadButton;
     }
 
-    public Button getsortButton(){
+    public Button getSortButton(){
         return sortButton;
     }
 
-    public Button getsaveButton(){
+    public Button getSaveButton(){
         return saveButton;
     }
     // TODO: Add getters for loadButton, saveButton and sortButton
@@ -258,9 +259,11 @@ class AppFrame extends BorderPane{
 
     private Button addButton;
     private Button clearButton;
+
     private Button loadButton;
     private Button saveButton;
     private Button sortButton;
+
     AppFrame()
     {
         // Initialise the header Object
@@ -276,21 +279,23 @@ class AppFrame extends BorderPane{
         // hint 1: ScrollPane() is the Pane Layout used to add a scroller - it will take the tasklist as a parameter
         // hint 2: setFitToWidth, and setFitToHeight attributes are used for setting width and height
         // hint 3: The center of the AppFrame layout should be the scroller window instead  of tasklist
-
+        ScrollPane s = new ScrollPane(taskList);
+        s.setFitToWidth(true);
+        s.setFitToHeight(true); 
 
         // Add header to the top of the BorderPane
         this.setTop(header);
         // Add scroller to the centre of the BorderPane
-        this.setCenter(taskList);
+        this.setCenter(s);
         // Add footer to the bottom of the BorderPane
         this.setBottom(footer);
 
         // Initialise Button Variables through the getters in Footer
         addButton = footer.getAddButton();
         clearButton = footer.getClearButton();
-        loadButton = footer.getloadButton();
-        saveButton = footer.getsaveButton();
-        sortButton = footer.getsortButton();
+        loadButton = footer.getLoadButton();
+        saveButton = footer.getSaveButton();
+        sortButton = footer.getSortButton();
 
         // Call Event Listeners for the Buttons
         addListeners();
@@ -319,16 +324,18 @@ class AppFrame extends BorderPane{
         clearButton.setOnAction(e -> {
             taskList.removeCompletedTasks();
         });
+
         loadButton.setOnAction(e -> {
             taskList.loadTasks();
         });
+
         saveButton.setOnAction(e -> {
             taskList.saveTasks();
         });
-        sortButton.setOnAction(e ->{
+
+        sortButton.setOnAction(e -> {
             taskList.sortTasks();
         });
-        
     }
 }
 
