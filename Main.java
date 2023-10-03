@@ -3,6 +3,7 @@ package TodoList;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -16,7 +17,7 @@ import javafx.scene.text.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.util.Comparator;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -125,7 +126,14 @@ class TaskList extends VBox {
                 Task task = new Task();
                 task.getTaskName().setText(line);
                 this.getChildren().add(task);
+
                 updateTaskIndices();
+                Button doneButton = task.getDoneButton();
+                    doneButton.setOnAction(e1 -> {
+                        // Call toggleDone on click
+                        task.toggleDone();
+                    });
+
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -163,15 +171,34 @@ class TaskList extends VBox {
         // hint 1: this.getChildren() gets the list of tasks
         // hint 2: Collections.sort() can be used to sort the tasks
         // hint 3: task.getTaskName().setText() sets the text of the task
-        List<String> listChildren = new ArrayList<String>();
+        List<Pair<String, Boolean>> listChildren = new ArrayList<Pair<String, Boolean>>();
+
         for(int i = 0; i < this.getChildren().size(); i++){
-            listChildren.add(((Task) this.getChildren().get(i)).getTaskName().getText().toString());
+            listChildren.add(new Pair<>(((Task) this.getChildren().get(i)).getTaskName().getText().toString(),
+                    ((Task) this.getChildren().get(i)).isMarkedDone()));
         }
-        Collections.sort(listChildren);
+
+        Collections.sort(listChildren, new Comparator<Pair<String, Boolean>>() {
+            @Override
+            public int compare(final Pair<String, Boolean> o1, final Pair<String, Boolean> o2){
+                return o1.getKey().compareTo(o2.getKey());
+            }
+        }
+        );
+
         this.getChildren().clear();
         for(int i = 0; i < listChildren.size(); i++){
             Task task = new Task();
-            task.getTaskName().setText(listChildren.get(i));
+            task.getTaskName().setText(listChildren.get(i).getKey());
+            if(listChildren.get(i).getValue()){
+                task.toggleDone();
+            }
+
+            Button doneButton = task.getDoneButton();
+                doneButton.setOnAction(e1 -> {
+                // Call toggleDone on click
+                task.toggleDone();
+            });
             this.getChildren().add(task);
             updateTaskIndices();
         }
