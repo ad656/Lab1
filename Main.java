@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
+
+import javax.swing.DefaultButtonModel;
+
 import java.io.FileWriter;
 
 class Task extends HBox {
@@ -84,6 +87,13 @@ class Task extends HBox {
             this.getChildren().get(i).setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;"); // change color of task to green
         }
     }
+    public void unDone(){
+        markedDone = false;
+        //this.setStyle();
+        for (int i = 0; i < this.getChildren().size(); i++) {
+            this.getChildren().get(i).setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;");// change color of task to green
+        }
+    }
 }
 
 class TaskList extends VBox {
@@ -131,7 +141,12 @@ class TaskList extends VBox {
                 Button doneButton = task.getDoneButton();
                     doneButton.setOnAction(e1 -> {
                         // Call toggleDone on click
+                        if (task.isMarkedDone()==false){
                         task.toggleDone();
+                        }
+                        else{
+                            task.unDone();
+                        }
                     });
 
             }
@@ -197,7 +212,12 @@ class TaskList extends VBox {
             Button doneButton = task.getDoneButton();
                 doneButton.setOnAction(e1 -> {
                 // Call toggleDone on click
-                task.toggleDone();
+                if (task.isMarkedDone()==false){
+                    task.toggleDone();
+                    }
+                    else{
+                        task.unDone();
+                    }
             });
             this.getChildren().add(task);
             updateTaskIndices();
@@ -341,7 +361,12 @@ class AppFrame extends BorderPane{
             Button doneButton = task.getDoneButton();
             doneButton.setOnAction(e1 -> {
                 // Call toggleDone on click
-                task.toggleDone();
+                if (task.isMarkedDone()==false){
+                    task.toggleDone();
+                    }
+                    else{
+                        task.unDone();
+                    }
             });
             // Update task indices
             taskList.updateTaskIndices();
