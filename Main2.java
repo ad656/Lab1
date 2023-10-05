@@ -1,90 +1,415 @@
-package ImageUploader;
+package TodoList;
 
-// Add necessary imports
 import javafx.application.Application;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Pair;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.text.TextAlignment;
+import javafx.geometry.Insets;
+import javafx.scene.text.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.List;
 
-import java.io.File;
+import javax.swing.DefaultButtonModel;
 
-// JavaFX Application main entry point
-public class Main extends Application {
+import java.io.FileWriter;
 
-    // To display images
-    private ImageView imageView = new ImageView();
+class Task extends HBox {
 
-    // To open a file dialog for selecting images
-    private FileChooser fileChooser = new FileChooser();
+    private Label index;
+    private TextField taskName;
+    private Button doneButton;
 
-    public static void main(String[] args) {
-        launch(args);
+    private boolean markedDone;
+
+    Task() {
+        this.setPrefSize(500, 20); // sets size of task
+        this.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;"); // sets background color of task
+        markedDone = false;
+
+        index = new Label();
+        index.setText(""); // create index label
+        index.setPrefSize(40, 20); // set size of Index label
+        index.setTextAlignment(TextAlignment.CENTER); // Set alignment of index label
+        index.setPadding(new Insets(10, 0, 10, 0)); // adds some padding to the task
+        this.getChildren().add(index); // add index label to task
+
+        taskName = new TextField(); // create task name text field
+        taskName.setPrefSize(380, 20); // set size of text field
+        taskName.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); // set background color of texfield
+        index.setTextAlignment(TextAlignment.LEFT); // set alignment of text field
+        taskName.setPadding(new Insets(10, 0, 10, 0)); // adds some padding to the text field
+        this.getChildren().add(taskName); // add textlabel to task
+
+        doneButton = new Button("Done"); // creates a button for marking the task as done
+        doneButton.setPrefSize(100, 20);
+        doneButton.setPrefHeight(Double.MAX_VALUE);
+        doneButton.setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0;"); // sets style of button
+
+        this.getChildren().add(doneButton);
     }
 
+    public void setTaskIndex(int num) {
+        this.index.setText(num + ""); // num to String
+        this.taskName.setPromptText("Task " + num);
+    }
+
+    public TextField getTaskName() {
+        return this.taskName;
+    }
+
+    public Button getDoneButton() {
+        return this.doneButton;
+    }
+
+    public boolean isMarkedDone() {
+        return this.markedDone;
+    }
+
+    public void toggleDone() {
+        
+        markedDone = true;
+        this.setStyle("-fx-border-color: #000000; -fx-border-width: 0; -fx-font-weight: bold;"); // remove border of task
+        for (int i = 0; i < this.getChildren().size(); i++) {
+            this.getChildren().get(i).setStyle("-fx-background-color: #BCE29E; -fx-border-width: 0;"); // change color of task to green
+        }
+    }
+    public void unDone(){
+        markedDone = false;
+        //this.setStyle();
+        for (int i = 0; i < this.getChildren().size(); i++) {
+            this.getChildren().get(i).setStyle("-fx-background-color: #DAE5EA; -fx-border-width: 0; -fx-font-weight: bold;");// change color of task to green
+        }
+    }
+}
+
+class TaskList extends VBox {
+
+    TaskList() {
+        this.setSpacing(5); // sets spacing between tasks
+        this.setPrefSize(500, 560);
+        this.setStyle("-fx-background-color: #F0F8FF;");
+    }
+
+    public void updateTaskIndices() {
+        int index = 1;
+        for (int i = 0; i < this.getChildren().size(); i++) {
+            if (this.getChildren().get(i) instanceof Task) {
+                ((Task) this.getChildren().get(i)).setTaskIndex(index);
+                index++;
+            }
+        }
+    }
+
+    public void removeCompletedTasks() {
+        this.getChildren().removeIf(task -> task instanceof Task && ((Task) task).isMarkedDone());
+        this.updateTaskIndices();
+    }
+
+    // TODO: Complete this method
+    /*
+     * Load tasks from a file called "tasks.txt"
+     * Add the tasks to the children of tasklist component
+     */
+    public void loadTasks() {
+        // hint 1: use try-catch block
+        // hint 2: use BufferedReader and FileReader
+        // hint 3: task.getTaskName().setText() sets the text of the task
+
+        try(FileReader fr = new FileReader("tasks.txt");
+                BufferedReader br = new BufferedReader(fr)){
+            String line = null;
+            while((line = br.readLine()) != null) {
+                Task task = new Task();
+                task.getTaskName().setText(line);
+                this.getChildren().add(task);
+
+                updateTaskIndices();
+                Button doneButton = task.getDoneButton();
+                    doneButton.setOnAction(e1 -> {
+                        // Call toggleDone on click
+                        if (task.isMarkedDone()==false){
+                        task.toggleDone();
+                        }
+                        else{
+                            task.unDone();
+                        }
+                    });
+
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+//        System.out.println("loadtasks() not implemented!");
+    }
+
+    // TODO: Complete this method
+    /*
+     * Save tasks to a file called "tasks.txt"
+     */
+    public void saveTasks() {
+        // hint 1: use try-catch block
+        // hint 2: use FileWriter
+        // hint 3: this.getChildren() gets the list of tasks
+        try{
+            FileWriter taskwrite = new FileWriter("tasks.txt");
+            for(int i = 0; i < this.getChildren().size(); i++){
+                taskwrite.write(((Task) this.getChildren().get(i)).getTaskName().getText() + "\n");
+            }
+            taskwrite.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+//        System.out.println("savetasks() not implemented!");
+    }
+
+    // TODO: Complete this method
+    /*
+     * Sort the tasks lexicographically
+     */
+    public void sortTasks() {
+        // hint 1: this.getChildren() gets the list of tasks
+        // hint 2: Collections.sort() can be used to sort the tasks
+        // hint 3: task.getTaskName().setText() sets the text of the task
+        List<Pair<String, Boolean>> listChildren = new ArrayList<Pair<String, Boolean>>();
+
+        for(int i = 0; i < this.getChildren().size(); i++){
+            listChildren.add(new Pair<>(((Task) this.getChildren().get(i)).getTaskName().getText().toString(),
+                    ((Task) this.getChildren().get(i)).isMarkedDone()));
+        }
+
+        Collections.sort(listChildren, new Comparator<Pair<String, Boolean>>() {
+            @Override
+            public int compare(final Pair<String, Boolean> o1, final Pair<String, Boolean> o2){
+                return o1.getKey().compareTo(o2.getKey());
+            }
+        }
+        );
+
+        this.getChildren().clear();
+        for(int i = 0; i < listChildren.size(); i++){
+            Task task = new Task();
+            task.getTaskName().setText(listChildren.get(i).getKey());
+            if(listChildren.get(i).getValue()){
+                task.toggleDone();
+            }
+
+            Button doneButton = task.getDoneButton();
+                doneButton.setOnAction(e1 -> {
+                // Call toggleDone on click
+                if (task.isMarkedDone()==false){
+                    task.toggleDone();
+                    }
+                    else{
+                        task.unDone();
+                    }
+            });
+            this.getChildren().add(task);
+            updateTaskIndices();
+        }
+ //       System.out.println("sorttasks() not implemented!");
+    }
+}
+
+class Footer extends HBox {
+
+    private Button addButton;
+    private Button clearButton;
+    // TODO: Add a button called "loadButton" to load tasks from file
+    // TODO: Add a button called "saveButton" to save tasks to a file
+    // TODO: Add a button called "sortButton" to sort the tasks lexicographically
+    private Button loadButton;
+    private Button saveButton;
+    private Button sortButton;
+
+    Footer() {
+        this.setPrefSize(500, 60);
+        this.setStyle("-fx-background-color: #F0F8FF;");
+        this.setSpacing(15);
+
+        // set a default style for buttons - background color, font size, italics
+        String defaultButtonStyle = "-fx-font-style: italic; -fx-background-color: #FFFFFF;  -fx-font-weight: bold; -fx-font: 11 arial;";
+
+        addButton = new Button("Add Task"); // text displayed on add button
+        addButton.setStyle(defaultButtonStyle); // styling the button
+        clearButton = new Button("Clear finished"); // text displayed on clear tasks button
+        clearButton.setStyle(defaultButtonStyle);
+
+        loadButton = new Button("Load Tasks");
+        loadButton.setStyle(defaultButtonStyle);
+        saveButton = new Button("Save Tasks");
+        saveButton.setStyle(defaultButtonStyle);
+        sortButton = new Button("Sort Tasks");
+        sortButton.setStyle(defaultButtonStyle);
+
+        this.getChildren().addAll(addButton, clearButton, loadButton, saveButton, sortButton); // adding buttons to footer
+        this.setAlignment(Pos.CENTER); // aligning the buttons to center
+
+        // TODO: Create loadButton, saveButton and sortButton to the footer
+    }
+
+    public Button getAddButton() {
+        return addButton;
+    }
+
+    public Button getClearButton() {
+        return clearButton;
+    }
+
+    public Button getLoadButton(){
+        return loadButton;
+    }
+
+    public Button getSortButton(){
+        return sortButton;
+    }
+
+    public Button getSaveButton(){
+        return saveButton;
+    }
+    // TODO: Add getters for loadButton, saveButton and sortButton
+}
+
+class Header extends HBox {
+
+    Header() {
+        this.setPrefSize(500, 60); // Size of the header
+        this.setStyle("-fx-background-color: #F0F8FF;");
+
+        Text titleText = new Text("To Do List"); // Text of the Header
+        titleText.setStyle("-fx-font-weight: bold; -fx-font-size: 20;");
+        this.getChildren().add(titleText);
+        this.setAlignment(Pos.CENTER); // Align the text to the Center
+    }
+}
+
+class AppFrame extends BorderPane{
+
+    private Header header;
+    private Footer footer;
+    private TaskList taskList;
+
+    private Button addButton;
+    private Button clearButton;
+
+    private Button loadButton;
+    private Button saveButton;
+    private Button sortButton;
+
+    AppFrame()
+    {
+        // Initialise the header Object
+        header = new Header();
+
+        // Create a tasklist Object to hold the tasks
+        taskList = new TaskList();
+        
+        // Initialise the Footer Object
+        footer = new Footer();
+
+        // TODO: Add a Scroller to the Task List
+        // hint 1: ScrollPane() is the Pane Layout used to add a scroller - it will take the tasklist as a parameter
+        // hint 2: setFitToWidth, and setFitToHeight attributes are used for setting width and height
+        // hint 3: The center of the AppFrame layout should be the scroller window instead  of tasklist
+        ScrollPane s = new ScrollPane(taskList);
+        s.setFitToWidth(true);
+        s.setFitToHeight(true); 
+
+        // Add header to the top of the BorderPane
+        this.setTop(header);
+        // Add scroller to the centre of the BorderPane
+        this.setCenter(s);
+        // Add footer to the bottom of the BorderPane
+        this.setBottom(footer);
+
+        // Initialise Button Variables through the getters in Footer
+        addButton = footer.getAddButton();
+        clearButton = footer.getClearButton();
+        loadButton = footer.getLoadButton();
+        saveButton = footer.getSaveButton();
+        sortButton = footer.getSortButton();
+
+        // Call Event Listeners for the Buttons
+        addListeners();
+    }
+
+    public void addListeners()
+    {
+
+        // Add button functionality
+        addButton.setOnAction(e -> {
+            // Create a new task
+            Task task = new Task();
+            // Add task to tasklist
+            taskList.getChildren().add(task);
+            // Add doneButtonToggle to the Done button
+            Button doneButton = task.getDoneButton();
+            doneButton.setOnAction(e1 -> {
+                // Call toggleDone on click
+                if (task.isMarkedDone()==false){
+                    task.toggleDone();
+                    }
+                    else{
+                        task.unDone();
+                    }
+            });
+            // Update task indices
+            taskList.updateTaskIndices();
+        });
+        
+        // Clear finished tasks
+        clearButton.setOnAction(e -> {
+            taskList.removeCompletedTasks();
+        });
+
+        loadButton.setOnAction(e -> {
+            taskList.loadTasks();
+        });
+
+        saveButton.setOnAction(e -> {
+            taskList.saveTasks();
+        });
+
+        sortButton.setOnAction(e -> {
+            taskList.sortTasks();
+        });
+    }
+}
+
+public class Main extends Application {
+
     @Override
-    public void start(Stage primaryStage) {
-        /*
-         * TODO1: Set a title 'Image Uploader' for the stage
-         * Hint: You can do this by using the setTitle() method of the stage class
-         */
-        primaryStage.setTitle("Image Uploader");
+    public void start(Stage primaryStage) throws Exception {
 
-        /*
-         * TODO2: Create a button called ‘uploadButton’.The text on the button should say 'Upload Image'.
-         * Hint: You can do this by creating an instance of the Button class and passing the text 'Upload Image' as an argument to the constructor.
-         */
-        Button uploadButton = new Button("Upload Image");
+        // Setting the Layout of the Window- Should contain a Header, Footer and the TaskList
+        AppFrame root = new AppFrame();
 
-        // Call uploadImage method on button click
-        uploadButton.setOnAction(e -> uploadImage(primaryStage));
-
-        /*
-         * TODO3: Create a vertical box layout called ‘vbox’
-         * Hint: You can do this by creating an instance of the VBox class and passing uploadButton and imageView as arguments to the constructor.
-         */
-        VBox vbox = new VBox(uploadButton, imageView);
-
-        /*
-         * TODO4: Center align the contents of the vbox.
-         * Hint: You can use the setAlignment method of the VBox class and use Pos.CENTER as an argument for center alignment.
-         */
-        vbox.setAlignment(Pos.CENTER);
-
-        /*
-         * TODO5: Create a scene called 'scene' using the vbox. Specify the height as 200 and width as 200.
-         * Hint: You can implement this by creating an instance of the Scene class and passing vbox, height and width as arguments to the constructor.
-         */
-        Scene scene = new Scene(vbox, 200,200);
-
-        primaryStage.setScene(scene);
+        // Set the title of the app
+        primaryStage.setTitle("To Do List");
+        // Create scene of mentioned size with the border pane
+        primaryStage.setScene(new Scene(root, 500, 600));
+        // Make window non-resizable
+        primaryStage.setResizable(false);
+        // Show the app
         primaryStage.show();
     }
 
-    private void uploadImage(Stage primaryStage) {
-
-        // Select which extensions are allowed
-        fileChooser.getExtensionFilters().add(new ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
-        File selectedFile = fileChooser.showOpenDialog(primaryStage);
-
-
-        if (selectedFile != null) {
-            Image image = new Image(selectedFile.toURI().toString());
-
-            /*
-             * TODO6: Set the selected image in imageView i.e. display the image.
-             * Hint: To implement this, you can use the setImage() method of ImageView and pass the selected image as an argument.
-             */
-            imageView.setImage(image);
-
-            // Resize the window to fit the image
-            primaryStage.setWidth(image.getWidth() + 100);
-            primaryStage.setHeight(image.getHeight() + 100);
-        }
+    public static void main(String[] args) {
+        launch(args);
     }
 }
